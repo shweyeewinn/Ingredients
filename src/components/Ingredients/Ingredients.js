@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import IngredientList from './IngredientList';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import IngredientForm from './IngredientForm';
+import IngredientList from './IngredientList';
 import Search from './Search';
 
 const Ingredients = () => {
@@ -23,34 +24,34 @@ const Ingredients = () => {
   }, []);
 
   useEffect(() => {
-    console.log('Rendering');
-  });
-  const addIngredientHandler = (ingedient) => {
+    console.log('RENDERING INGREDIENTS', userIngredients);
+  }, [userIngredients]);
+
+  const filteredIngredientsHandler = useCallback((filteredIngredients) => {
+    setUserIngredients(filteredIngredients);
+  }, []);
+
+  const addIngredientHandler = (ingredient) => {
     fetch('https://react-hooks-project-120ad.firebaseio.com/ingredients.json', {
       method: 'POST',
-      body: JSON.stringify(ingedient),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      body: JSON.stringify(ingredient),
+      headers: { 'Content-Type': 'application/json' },
     })
       .then((response) => {
-        console.log('response', response);
         return response.json();
       })
       .then((responseData) => {
-        console.log('responseData', responseData);
         setUserIngredients((prevIngredients) => [
           ...prevIngredients,
-          {
-            id: responseData.name,
-            ...ingedient,
-          },
+          { id: responseData.name, ...ingredient },
         ]);
       });
   };
 
-  const removeIngredientHandler = (id) => {
-    setUserIngredients(userIngredients.filter((ing) => ing.id !== id));
+  const removeIngredientHandler = (ingredientId) => {
+    setUserIngredients((prevIngredients) =>
+      prevIngredients.filter((ingredient) => ingredient.id !== ingredientId)
+    );
   };
 
   return (
@@ -58,10 +59,10 @@ const Ingredients = () => {
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
-        <Search />
+        <Search onLoadIngredients={filteredIngredientsHandler} />
         <IngredientList
           ingredients={userIngredients}
-          onRemoveItem={(id) => removeIngredientHandler(id)}
+          onRemoveItem={removeIngredientHandler}
         />
       </section>
     </div>
